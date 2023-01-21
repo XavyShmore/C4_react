@@ -67,9 +67,7 @@ export class Game{
             }
         }
     }
-    isFirstPlayerTurn() {
-        return this.gameState.movePlayed % 2 == 0 ? true:false;
-    }
+    
     //returns the lower available spot in the column
     dropPosition(column){
         var returnValue = 5;
