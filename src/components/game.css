@@ -1,0 +1,85 @@
+:root{
+    --cellSize: 100px;
+}
+
+#game{
+    text-align: center;
+}
+
+.game-container{
+    display: inline-block;
+}
+
+.board-container {
+    display: inline-block;
+    padding: calc(var(--cellSize)/20);
+    background-color: rgb(35, 79, 255);
+}
+
+.board {
+    display: inline-grid;
+    grid-template-columns: auto auto auto auto auto auto auto;
+    gap: calc(var(--cellSize)/20);
+}
+
+.stackColumn {
+    display: inline-grid;
+    grid-template-columns: auto;
+    gap: calc(var(--cellSize)/20);
+}
+
+.dropSpot {
+    height: var(--cellSize);
+    width: var(--cellSize);
+    background-color: black;
+    opacity: 50%;
+}
+.p1token{
+    background-color: red;
+}
+.p2token{
+    background-color: yellow;
+}
+.highlight{
+    background-color: white;
+}
+
+.connect4{
+    animation-name: connect4;
+    animation-duration: 0.5s;
+    animation-fill-mode: forwards;
+}
+@keyframes connect4{
+    to{
+        margin:calc(var(--cellSize)/10);
+        height: calc(var(--cellSize)*0.8);
+        width: calc(var(--cellSize)*0.8);
+    }
+}
+
+
+/*Settings pannel*/
+#overlay {
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    width: 100%; /* Full width (cover the whole page) */
+    height: 100%; /* Full height (cover the whole page) */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+    z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+    cursor: pointer; /* Add a pointer on hover */
+  }
+#settings_overlay_form{
+    position: fixed; /* Sit on top of the page content */
+    display: none; /* Hidden by default */
+    z-index: 3;
+    transform: translate(-50%,-50%);
+    top: 50%;
+    left: 50%;
+  }
+.settings_form{
+    margin: 10px;
+}
