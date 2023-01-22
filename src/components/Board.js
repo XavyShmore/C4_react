@@ -4,22 +4,39 @@ import React from "react";
 class Column extends React.Component {
     constructor(props) {
         super(props)
+
         this.state = {
             x: props.x,
             columnGameState: props.columnGameState,
 
             dropSpot: props.dropSpot,
             highlight: false,
+            pop:[false, false, false, false, false, false],
             streak: props.streak
         }
     }
     renderCase(y) {
+
+        this.props.streak.forEach((value, index) => {
+            if (value[0] === this.state.x && value[1] === y){
+
+                let delay = index * 200;
+                setTimeout(()=>{
+                    let newPop = this.state.pop.slice();
+                    newPop[y] = true;
+                    this.setState({
+                        pop: newPop
+                    });
+                }, delay);
+            }
+        });
+
         let styleClass = (
             "dropSpot" +
-            (this.state.columnGameState[1][y] ? " p1token" : "") +
-            (this.state.columnGameState[2][y] ? " p2token" : "") +
-            (this.state.highlight && y == this.state.dropSpot ? " highlight" : "") +
-            (this.state.streak.includes(y) ? " connect4" : "")
+            (this.props.columnGameState[1][y] ? " p1token" : "") +
+            (this.props.columnGameState[2][y] ? " p2token" : "") +
+            (this.state.highlight && y == this.props.dropSpot ? " highlight" : "") +
+            (this.state.pop[y] ? " connect4" : "")
         )
         return (<div className={styleClass} key={y} ></div>)
     }
@@ -44,7 +61,8 @@ class Column extends React.Component {
             <div
                 className="stackColumn"
                 onMouseEnter={() => this.onMouseEnter()}
-                onMouseLeave={() => this.onMouseLeave()}>
+                onMouseLeave={() => this.onMouseLeave()}
+                onClick={() => this.props.onClick()} >
                 {cases}
             </div>
         )
@@ -54,13 +72,14 @@ class Column extends React.Component {
 
 function Board(props) {
 
-    let game = new Game(props.gameState)
+    let game = new Game(props.gameState);
 
     let columns = []
-    for (var i = 0; i < 7; i++) {
+    for (let j = 0; j < 7; j++) {
 
-        let columnGameState = game.gameState.board.map(slice => slice[i]);
-        console.log("ok");
+        let i = j;
+
+        let columnGameState = props.gameState.board.map(slice => slice[i]);
 
         columns.push(
             <Column
@@ -68,7 +87,8 @@ function Board(props) {
                 x={i} 
                 columnGameState={columnGameState}
                 dropSpot={game.dropPosition(i)}
-                streak={[]}
+                streak={props.gameState.winningStreak}
+                onClick = {() => props.handleColumnClick(i)}
                  />
         )
     }

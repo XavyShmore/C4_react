@@ -10,13 +10,13 @@ class basicPlayer {
     
     //for automated play
     //returns between 0 and 6 for the column the players wants to play
-    play(gameState, fullColumns){
+    play(gameState){
         throw new Error("play is not defined for this player");
     }
 
     //for user input
     //returns the column's index the player want to play in 
-    onUserInput(column, fullColumns){
+    onUserInput(column, gameState){
         throw new Error("onUserInput is not defined for this player");
     }
 }
@@ -28,9 +28,9 @@ export class randomPlayer extends basicPlayer{
         this.callON = automaticPlay ? "play": "click";
     }
 
-    play(gameState, fullColumns){
+    play(gameState){
 
-        if (fullColumns.length >= 7){
+        if (gameState.fullColumns().length >= 7){
             throw new Error("Impossible to play because all the columns are full");
         }
         
@@ -38,8 +38,8 @@ export class randomPlayer extends basicPlayer{
 
         let numberFound;
         while (!validNumberFound){
-            numberFound = Math.floor(Math.random())
-            if (!fullColumns.includes(numberFound)){
+            numberFound = Math.floor(Math.random()*7);
+            if (!(gameState.fullColumns().includes(numberFound))){
                 // the number is valid and we can exit the loop
                 validNumberFound = true;
             }
@@ -48,8 +48,8 @@ export class randomPlayer extends basicPlayer{
         return numberFound;
     }
 
-    onUserInput(column, fullColumns){
-        this.play("not needed", fullColumns);
+    onUserInput(column, gameState){
+        return this.play(gameState);
     }
 }
 
@@ -60,11 +60,15 @@ export class humanPlayer extends basicPlayer{
         this.needUserInput = true;
     }
 
-    onUserInput(column, fullColumns){
-        if (!fullColumns.includes(column)){
+    onUserInput(column, gameState){
+        if (!gameState.fullColumns().includes(column)){
             return column;
         }else{
             throw new Error("Impossible to play because all the columns are full");
         }
     }
+}
+
+export class minMaxPlayer extends basicPlayer{
+    
 }

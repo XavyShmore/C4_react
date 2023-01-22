@@ -5,11 +5,19 @@ export class Game{
         winningStreak: [],
         movePlayed: 0, // movePlayed since the begining of the game.
         gameDimention:[3,7,6], // [both player,player 1, player 2], [columns], [rows]
-        get playerToPlay (){
-            return this.isFirstPlayerTurn()?1:2;
-        },
         isFirstPlayerTurn(){
             return this.movePlayed % 2 == 0 ? true:false;
+        },
+
+        fullColumns(){
+            let fullColumnsLst = [];
+            this.board[0].forEach((column, i)=>{
+                if (column == [true, true, true, true, true, true]){
+                    fullColumnsLst.push(i);
+                }
+            });
+
+            return fullColumnsLst;
         }
     }
     constructor(gameState = 0, safe = false){ // is safe if gamestate as been produced by the gameEngine
@@ -24,7 +32,7 @@ export class Game{
                 }
             }
         }else{ // a board already exists let's use it
-            this.gameState = deepCopyGameState(gameState);
+            this.gameState = this.deepCopyGameState(gameState);
             if (!safe){ // would idealy need function to check board[0]
                 this.gameState.movePlayed = countMove(); //make sure this.gameState.movePlayed is valid
                 this.checkWinner();
@@ -44,30 +52,9 @@ export class Game{
                     return total;
                 }
             }
-            function deepCopyGameState(gameStateToCopy){
-                var newBoard = [];
-                for(var i = 0; i < gameStateToCopy.gameDimention[0]; i++){
-                    newBoard.push([]);
-                    for(var j = 0; j < gameStateToCopy.gameDimention[1]; j++){
-                        newBoard[i].push([...gameStateToCopy.board[i][j]]);
-                    }
-                }
-                return {
-                    state: gameStateToCopy.state,
-                    board: newBoard,
-                    winningStreak: [...gameStateToCopy.winningStreak],
-                    movePlayed:gameStateToCopy.movePlayed,
-                    gameDimention:gameStateToCopy.gameDimention,
-                    isFirstPlayerTurn:gameStateToCopy.isFirstPlayerTurn,
-                    get playerToPlay (){
-                        return this.isFirstPlayerTurn()?1:2;
-                    }
-                }
-
-            }
         }
     }
-    
+
     //returns the lower available spot in the column
     dropPosition(column){
         var returnValue = 5;
@@ -150,5 +137,26 @@ export class Game{
             return [3]; // draw
         }
         return [0]; // The game continues
+    }
+
+    // Create a copy of a game state
+    deepCopyGameState(gameStateToCopy = this.gameState){
+        var newBoard = [];
+        for(var i = 0; i < gameStateToCopy.gameDimention[0]; i++){
+            newBoard.push([]);
+            for(var j = 0; j < gameStateToCopy.gameDimention[1]; j++){
+                newBoard[i].push([...gameStateToCopy.board[i][j]]);
+            }
+        }
+        return {
+            state: gameStateToCopy.state,
+            board: newBoard,
+            winningStreak: [...gameStateToCopy.winningStreak],
+            movePlayed:gameStateToCopy.movePlayed,
+            gameDimention:gameStateToCopy.gameDimention,
+            isFirstPlayerTurn:gameStateToCopy.isFirstPlayerTurn,
+            fullColumns: gameStateToCopy.fullColumns
+        }
+
     }
 }

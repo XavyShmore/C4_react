@@ -36,9 +36,11 @@
 }
 .p1token{
     background-color: red;
+    opacity: 100%;
 }
 .p2token{
     background-color: yellow;
+    opacity: 100%;
 }
 .highlight{
     background-color: white;
