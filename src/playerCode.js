@@ -2,44 +2,44 @@ import { Game } from "./C4Engine";
 
 //virtual
 class basicPlayer {
-    constructor(){
+    constructor() {
         this.name = "Basic Player"
         this.needUserInput = false; // if true play() need the column
         this.callON = "click"; //click or play
     }
-    
+
     //for automated play
     //returns between 0 and 6 for the column the players wants to play
-    play(gameState){
+    play(gameState) {
         throw new Error("play is not defined for this player");
     }
 
     //for user input
     //returns the column's index the player want to play in 
-    onUserInput(column, gameState){
+    onUserInput(column, gameState) {
         return this.play(gameState);
     }
 }
 
-export class randomPlayer extends basicPlayer{
-    constructor(wait = true){
+export class randomPlayer extends basicPlayer {
+    constructor(wait = true) {
         super();
         this.name = "Random Player"
-        this.callON = !wait ? "play": "click";
+        this.callON = !wait ? "play" : "click";
     }
 
-    play(gameState){
+    play(gameState) {
 
-        if (gameState.fullColumns().length >= 7){
+        if (gameState.fullColumns().length >= 7) {
             throw new Error("Impossible to play because all the columns are full");
         }
-        
+
         let validNumberFound = false;
 
         let numberFound;
-        while (!validNumberFound){
-            numberFound = Math.floor(Math.random()*7);
-            if (!(gameState.fullColumns().includes(numberFound))){
+        while (!validNumberFound) {
+            numberFound = Math.floor(Math.random() * 7);
+            if (!(gameState.fullColumns().includes(numberFound))) {
                 // the number is valid and we can exit the loop
                 validNumberFound = true;
             }
@@ -50,41 +50,52 @@ export class randomPlayer extends basicPlayer{
 
 }
 
-export class humanPlayer extends basicPlayer{
-    constructor(name = "Human Player"){
+export class humanPlayer extends basicPlayer {
+    constructor(name = "Human Player") {
         super();
         this.name = name;
         this.needUserInput = true;
     }
 
-    onUserInput(column, gameState){
-        if (!gameState.fullColumns().includes(column)){
+    onUserInput(column, gameState) {
+        if (!gameState.fullColumns().includes(column)) {
             return column;
-        }else{
+        } else {
             throw new Error("Impossible to play because all the columns are full");
         }
     }
 }
 
-export class minMaxPlayer extends basicPlayer{
-    constructor(wait = true){
+export class minMaxPlayer extends basicPlayer {
+    constructor(wait = true) {
         super();
         this.name = "Min Max Player";
-        this.callON = !wait ? "play": "click";
+        this.callON = !wait ? "play" : "click";
+
+        this.lookup = new Map();
     }
 
-    play(gameState){
-
+    play(gameState) {
+        var lookup = new Map();
         var minMaxCall = 0;
 
         //player 1 maximise, player 2 minimize
-        function minMax(gameState, isMaximising, maxDepth = 4,depth = 0){
-
+        function minMax(gameState, isMaximising, maxDepth = 4, depth = 0) {
             minMaxCall++;
-            
+
+            //check if game board is in lookup
+            const gameStateStr = gameState.board.toString();
+
+            const lookupResult = lookup.get(gameStateStr);
+
+            if (lookupResult !== undefined) {
+                    return lookupResult;
+            }
+
+
             let result = [];
-            for (let i = 0; i < 7; i++){
-                let engine = new Game(gameState);
+            for (let i = 0; i < 7; i++) {
+                let engine = new Game(gameState, true);
                 try {
                     engine.play(isMaximising, i);
                 } catch (error) {
@@ -94,26 +105,31 @@ export class minMaxPlayer extends basicPlayer{
                 let evalu = evaluation(engine.gameState);
 
                 //if game is not finished call minmax recusively to get score up to maxDepth
-                if(!evalu[0]){
+                if (!evalu[0]) {
                     //if max depth reached add a 0 in the score for the move
-                    if (depth >= maxDepth){
-                        result.push([0, i])
+                    if (depth >= maxDepth) {
+                        result.push([0, i]);
                     }
                     //else call minmax recusively to get score
-                    else{
-                        result.push([minMax(engine.gameState, !isMaximising, maxDepth, depth + 1)[0], i]);
+                    else {
+
+                        let minMaxResult = [minMax(engine.gameState, !isMaximising, maxDepth, depth + 1)[0], i];
+
+                        lookup.set(gameStateStr, minMaxResult);
+
+                        result.push(minMaxResult);
                     }
                 }
                 //else the game is finnished, if active player winning, return winning move, else push result 
-                else{
+                else {
                     //if active player is winning return (basic pruning)
-                    if(evalu[1] === (isMaximising?1:-1)){
-                        return [evalu[1], i] // ez win wont find better move
+                    if (evalu[1] === (isMaximising ? 1 : -1)) {
+                        return [evalu[1] / (depth + 1), i]; // ez win wont find better move
                     }
 
                     //else it is a draw or a defeat, push result
-                    else{
-                        result.push(evalu[1], i);
+                    else {
+                        result.push(evalu[1] / (depth + 1), i);
                     }
                 }
             }
@@ -121,42 +137,40 @@ export class minMaxPlayer extends basicPlayer{
             let max = result[0];
             let min = result[0];
 
-            for (let i = 1; i < result.length; i++){
-                let score = result[i]
-                if (score[0] > max[0]){
+            for (let i = 1; i < result.length; i++) {
+                let score = result[i];
+                if (score[0] > max[0]) {
                     max = score;
-                }else if (score[0] < min[0]){
+                } else if (score[0] < min[0]) {
                     min = score;
                 }
             }
-            if (depth === 0){
+            if (depth === 0) {
                 console.log(result);
             }
 
-            return isMaximising? max:min;
+            return isMaximising ? max : min;
         }
 
         //return array [isGameFinished, score] score = 1 if player 1 wins, -1 if player 2 wins, 0 if draw 
-        function evaluation(gameState){
+        function evaluation(gameState) {
             let status = gameState.state;
 
             //game is not finished
-            if (status === 0){
+            if (status === 0) {
                 return [false, 0];
-            } else if (status === 1){
+            } else if (status === 1) {
                 return [true, 1];
-            } else if (status === 2){
-                return [true, -1]
-            } else{
-                return[true, 0]
+            } else if (status === 2) {
+                return [true, -1];
+            } else {
+                return [true, 0];
             }
         }
 
-        var toReturn = minMax(gameState, gameState.isFirstPlayerTurn(), 5)[1];
+        var toReturn = minMax(gameState, gameState.isFirstPlayerTurn(),7)[1];
 
         console.log(`Min Max call ${minMaxCall}`);
         return toReturn;
     }
-
-
 }
