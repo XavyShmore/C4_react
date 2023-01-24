@@ -12,9 +12,10 @@ export class Game{
         fullColumns(){
             let fullColumnsLst = [];
             this.board[0].forEach((column, i)=>{
-                if (column == [true, true, true, true, true, true]){
-                    fullColumnsLst.push(i);
+                for (const caseValue of column){
+                    if(!caseValue) return;
                 }
+                fullColumnsLst.push(i);
             });
 
             return fullColumnsLst;
