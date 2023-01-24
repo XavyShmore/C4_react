@@ -1,6 +1,6 @@
 import React from "react";
 import { Game as C4Engine } from "../C4Engine";
-import {humanPlayer, randomPlayer} from "../playerCode";
+import {humanPlayer, randomPlayer, minMaxPlayer} from "../playerCode";
 
 import "./game.css"
 
@@ -13,7 +13,7 @@ class Game extends React.Component{
         let engine = new C4Engine();
 
         this.state = {
-            players: [new humanPlayer(), new randomPlayer(false)],
+            players: [new humanPlayer(), new minMaxPlayer(true)],
             gameState: engine.gameState
         }
     }
