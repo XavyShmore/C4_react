@@ -195,9 +195,7 @@ export class minMaxPlayer extends basicPlayer {
             return arrayToReturn[indexToReturn];
         }
 
-        console.profile("qwe");
-        var toReturn = minMax(gameState, gameState.isFirstPlayerTurn(), 6, 0, false)[1];
-        console.profileEnd("qwe");
+        const toReturn = minMax(gameState, gameState.isFirstPlayerTurn(), 6, 0, false)[1];
 
         console.log(`Min Max call ${minMaxCall}`);
         return toReturn;
