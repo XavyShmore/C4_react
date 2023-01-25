@@ -21,14 +21,14 @@ class Game extends React.Component{
     play(column){
 
         // if the game is done dont allow players to play
-        if(this.state.gameState.state != 0){
+        if(this.state.gameState.state !== 0){
             return;
         }
 
         let engine = new C4Engine(this.state.gameState);
 
         engine.play(engine.gameState.isFirstPlayerTurn(), column);
-        engine.checkWinner();
+        engine.checkWinner(true);
 
         this.setState({
             gameState: engine.deepCopyGameState()
@@ -38,7 +38,7 @@ class Game extends React.Component{
     handleColumnClick(column){
 
         // if the game is done dont allow players to play
-        if(this.state.gameState.state != 0){
+        if(this.state.gameState.state !== 0){
             return;
         }
 

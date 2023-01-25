@@ -76,99 +76,128 @@ export class minMaxPlayer extends basicPlayer {
     }
 
     play(gameState) {
-        var lookup = new Map();
+        var lookup = this.lookup
         var minMaxCall = 0;
 
         //player 1 maximise, player 2 minimize
-        function minMax(gameState, isMaximising, maxDepth = 4, depth = 0) {
+        function minMax(gameState, isMaximising, maxDepth = 4, depth = 0, randomize = false) {
             minMaxCall++;
 
-            //check if game board is in lookup
-            const gameStateStr = gameState.board.toString();
+            let result = [];
 
-            const lookupResult = lookup.get(gameStateStr);
-
-            if (lookupResult !== undefined) {
-                    return lookupResult;
+            //return array [isGameFinished, score] score = 1 if player 1 wins, -1 if player 2 wins, 0 if draw 
+            function evaluation(status) {
+                //game is not finished
+                if (status === 0) {
+                    return [false, 0];
+                } else if (status === 1) {
+                    return [true, 1];
+                } else if (status === 2) {
+                    return [true, -1];
+                } else {
+                    return [true, 0];
+                }
             }
 
+            //checks wich collumns are not yeat full and returns an array with there index, this function also check if this situation as already been seen if so only ask to play the best move
+            function moveToCheck(gameState) {
 
-            let result = [];
-            for (let i = 0; i < 7; i++) {
-                let engine = new Game(gameState, true);
-                try {
-                    engine.play(isMaximising, i);
-                } catch (error) {
-                    continue;
-                }
+                const possibleIndexTocheck = [0, 1, 2, 3, 4, 5, 6];
+                const columnfull = gameState.fullColumns();
 
-                let evalu = evaluation(engine.gameState);
+                return possibleIndexTocheck.filter(value=>{
+                    return !columnfull.includes(value);
+                });
+            }
+
+            for (const i of moveToCheck(gameState)) {
+                const engine = new Game(gameState, true);
+
+                engine.play(isMaximising, i, true);
+
+                const evalu = evaluation(engine.gameState.state);
 
                 //if game is not finished call minmax recusively to get score up to maxDepth
                 if (!evalu[0]) {
                     //if max depth reached add a 0 in the score for the move
                     if (depth >= maxDepth) {
-                        result.push([0, i]);
+                        result.push([0, i, false, depth]);
                     }
                     //else call minmax recusively to get score
                     else {
 
-                        let minMaxResult = [minMax(engine.gameState, !isMaximising, maxDepth, depth + 1)[0], i];
+                        //check if minMax has already been called on this state
+                        const lookupStr = engine.gameState.board.toString()
 
-                        lookup.set(gameStateStr, minMaxResult);
+                        const lookupResult = lookup.get(lookupStr);
 
-                        result.push(minMaxResult);
+                        if (lookupResult === undefined || (!lookupResult[2] && depth !== lookupResult[3])) {
+
+                            let minMaxResult = minMax(engine.gameState, !isMaximising, maxDepth, depth + 1);
+
+                            minMaxResult[1] = i;
+
+                            if (minMaxResult[0] !== 0) {
+                                lookup.set(lookupStr, minMaxResult);
+                            }
+
+                            result.push(minMaxResult);
+                        } else {
+                            let minMaxResult = lookupResult;
+                            minMaxResult[1] = i;
+                            result.push(minMaxResult);
+                        }
                     }
                 }
                 //else the game is finnished, if active player winning, return winning move, else push result 
                 else {
                     //if active player is winning return (basic pruning)
                     if (evalu[1] === (isMaximising ? 1 : -1)) {
-                        return [evalu[1] / (depth + 1), i]; // ez win wont find better move
+                        return [evalu[1] / (depth + 1), i, true, depth]; // ez win wont find better move
                     }
 
                     //else it is a draw or a defeat, push result
                     else {
-                        result.push(evalu[1] / (depth + 1), i);
+                        result.push([evalu[1] / (depth + 1), i, true, depth]);
                     }
                 }
             }
 
-            let max = result[0];
-            let min = result[0];
+            let max = [result[0]];
+            let min = [result[0]];
 
             for (let i = 1; i < result.length; i++) {
                 let score = result[i];
-                if (score[0] > max[0]) {
-                    max = score;
-                } else if (score[0] < min[0]) {
-                    min = score;
+                if (score[0] > max[0][0]) {
+                    max = [score];
+                } else if (score[0] === max[0][0]) {
+                    max.push(score)
+                }
+
+                if (score[0] < min[0][0]) {
+                    min = [score];
+                } else if (score[0] === min[0][0]) {
+                    min.push(score)
                 }
             }
             if (depth === 0) {
                 console.log(result);
             }
 
-            return isMaximising ? max : min;
-        }
+            let arrayToReturn = isMaximising ? max : min;
 
-        //return array [isGameFinished, score] score = 1 if player 1 wins, -1 if player 2 wins, 0 if draw 
-        function evaluation(gameState) {
-            let status = gameState.state;
+            let indexToReturn = 0;
 
-            //game is not finished
-            if (status === 0) {
-                return [false, 0];
-            } else if (status === 1) {
-                return [true, 1];
-            } else if (status === 2) {
-                return [true, -1];
-            } else {
-                return [true, 0];
+            if (randomize === true) {
+                indexToReturn = Math.floor(Math.random() * arrayToReturn.length);
             }
+
+            return arrayToReturn[indexToReturn];
         }
 
-        var toReturn = minMax(gameState, gameState.isFirstPlayerTurn(),7)[1];
+        console.profile("qwe");
+        var toReturn = minMax(gameState, gameState.isFirstPlayerTurn(), 6, 0, false)[1];
+        console.profileEnd("qwe");
 
         console.log(`Min Max call ${minMaxCall}`);
         return toReturn;
