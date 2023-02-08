@@ -11,16 +11,19 @@ export class Game {
 
         fullColumns() {
             let fullColumnsLst = [];
-            this.board[0].forEach((column, i) => {
-                for (const caseValue of column) {
-                    if (!caseValue) return;
+
+            for (let i = 0; i < 7; i++) {
+                if (this.board[0][i][0]) {
+                    fullColumnsLst.push(i);
                 }
-                fullColumnsLst.push(i);
-            });
+            }
 
             return fullColumnsLst;
         }
     }
+
+    moveHistory = []
+
     constructor(gameState = 0, safe = false) { // is safe if gamestate as been produced by the gameEngine
         if (gameState === 0) { //if no board is passed create a new game
             for (let i = 0; i < this.gameState.gameDimention[0]; i++) {
@@ -58,8 +61,16 @@ export class Game {
 
     //returns the lower available spot in the column
     dropPosition(column) {
-        var returnValue = 5;
-        //console.log(column, this.gameState.board[0]);
+
+        for (let i = 5; i>=0; i--){
+            if(!this.gameState.board[0][column][i]){
+                return i;
+            }
+        }
+        return -1;
+
+        /*
+        let returnValue = 5;
         this.gameState.board[0][column].every((spot, index) => {
             if (spot) {
                 returnValue = index - 1;
@@ -67,22 +78,24 @@ export class Game {
             }
             return true;
         });
-        return returnValue;
+        return returnValue;*/
     }
+
     play(isFirstPlayer, columnIndex, safe = false) { // Add the play to the game board and returns the height played
 
-        const gs = this.gameState;
         const height = this.dropPosition(columnIndex);
 
-
         if (!safe) {
-            if (isFirstPlayer !== gs.isFirstPlayerTurn()) throw Error("Not this player turn");//Error if wrong player tries to play
+            if (isFirstPlayer !== this.gameState.isFirstPlayerTurn()) throw Error("Not this player turn");//Error if wrong player tries to play
             if (height < 0) throw Error("Column full"); //Error if the column the player tris to play in is full
         }
 
-        gs.board[0][columnIndex][height] = true;
-        gs.board[isFirstPlayer ? 1 : 2][columnIndex][height] = true;
-        gs.movePlayed++;
+        const playerIndex = isFirstPlayer ? 1 : 2;
+
+        this.gameState.board[0][columnIndex][height] = true;
+        this.gameState.board[playerIndex][columnIndex][height] = true;
+        this.gameState.movePlayed++;
+        this.moveHistory.push(columnIndex);
         this.checkWinner();
     }
     //Returns 0 if games continues, 1 if player 1 win, 2 if player 2 win and 3 if draw  
@@ -95,16 +108,13 @@ export class Game {
             function checkLine(x, y, pIn) {
 
                 function detectLine(pX, pY, vector, pI = pIn) {
-                    function isOutOfBound(x, y) {
-                        return x < 0 || y < 0 || x >= 7 || y >= 6;
-                    }
 
                     let count = 0;
                     while (board[pI][pX][pY]) {
                         pX += vector[0];
                         pY += vector[1];
                         count++;
-                        if (isOutOfBound(pX, pY)) return count;
+                        if (pX < 0 || pX >= 7 || pY >= 6) return count;
                     }
                     return count;
                 }
@@ -134,7 +144,7 @@ export class Game {
         }
 
         for (let i = 1; i < 3; i++) {
-            let playerResult = checkPlayer(i);
+            const playerResult = checkPlayer(i);
             if (playerResult[0]) {
                 this.gameState.state = i;
                 this.gameState.winningStreak = playerResult[1];
@@ -147,6 +157,28 @@ export class Game {
             return 3; // draw
         }
         return 0; // The game continues
+    }
+
+    undo() {
+        const lastmove = this.moveHistory.pop();
+
+        //verify there is a valid last move
+        if (lastmove === undefined) {
+            throw Error("No moves recorded yet")
+        }
+
+        //decrement the move count
+        this.gameState.movePlayed--;
+
+        //reset the board
+        const rowIndex = this.dropPosition(lastmove) + 1;
+        for (let i = 0; i < 3; i++) {
+            this.gameState.board[i][lastmove][rowIndex] = false;
+        }
+
+        //reset endgame stats in case the game was finished 
+        this.gameState.state = 0;
+        this.gameState.winningStreak = [];
     }
 
     // Create a copy of a game state

@@ -35,7 +35,7 @@ class Column extends React.Component {
             "dropSpot" +
             (this.props.columnGameState[1][y] ? " p1token" : "") +
             (this.props.columnGameState[2][y] ? " p2token" : "") +
-            (this.state.highlight && y == this.props.dropSpot ? " highlight" : "") +
+            (this.state.highlight && y === this.props.dropSpot ? " highlight" : "") +
             (this.state.pop[y] ? " connect4" : "")
         )
         return (<div className={styleClass} key={y} ></div>)

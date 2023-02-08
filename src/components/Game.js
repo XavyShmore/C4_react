@@ -1,13 +1,14 @@
 import React from "react";
 import { Game as C4Engine } from "../C4Engine";
-import {humanPlayer, randomPlayer, minMaxPlayer} from "../playerCode";
+import { humanPlayer, randomPlayer, minMaxPlayer } from "../playerCode";
 
 import "./game.css"
 
 import Board from "./Board";
+import PlayerCards from "./PlayerCards";
 
-class Game extends React.Component{
-    constructor(props){
+class Game extends React.Component {
+    constructor(props) {
         super(props);
 
         let engine = new C4Engine();
@@ -18,10 +19,10 @@ class Game extends React.Component{
         }
     }
 
-    play(column){
+    play(column) {
 
         // if the game is done dont allow players to play
-        if(this.state.gameState.state !== 0){
+        if (this.state.gameState.state !== 0) {
             return;
         }
 
@@ -34,22 +35,22 @@ class Game extends React.Component{
             gameState: engine.deepCopyGameState()
         });
     }
-    
-    handleColumnClick(column){
+
+    handleColumnClick(column) {
 
         // if the game is done dont allow players to play
-        if(this.state.gameState.state !== 0){
+        if (this.state.gameState.state !== 0) {
             return;
         }
 
-        let playerIndex = this.state.gameState.isFirstPlayerTurn()?0:1;
+        let playerIndex = this.state.gameState.isFirstPlayerTurn() ? 0 : 1;
 
         let columnToPlay;
-        
-        if (this.state.players[playerIndex].callON === "click"){
-            if(this.state.players[playerIndex].needUserInput){
+
+        if (this.state.players[playerIndex].callON === "click") {
+            if (this.state.players[playerIndex].needUserInput) {
                 columnToPlay = this.state.players[playerIndex].onUserInput(column, this.state.gameState);
-            }else{
+            } else {
                 columnToPlay = this.state.players[playerIndex].play(this.state.gameState);
             }
         }
@@ -57,15 +58,15 @@ class Game extends React.Component{
         this.play(columnToPlay);
     }
 
-    render(){
-        return(
+    render() {
+        return (
             <div id="game">
                 <div className="game-container">
                     <div className="board-container">
                         <Board gameState={this.state.gameState} handleColumnClick={(i) => this.handleColumnClick(i)} />
                     </div>
+                    <PlayerCards players={this.state.players} gameState={this.state.gameState}></PlayerCards>
                 </div>
-
             </div>
         )
     }
