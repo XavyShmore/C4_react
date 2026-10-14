@@ -107,6 +107,13 @@ export class minMaxPlayer extends basicPlayer {
                 }
             }
 
+            //key of a position for the lookup, a position and its left/right mirror image share the same key (same score)
+            function positionKey(board) {
+                const key = board[1].toString() + "|" + board[2].toString();
+                const mirrorKey = board[1].slice().reverse().toString() + "|" + board[2].slice().reverse().toString();
+                return key < mirrorKey ? key : mirrorKey;
+            }
+
             //checks wich collumns are not yeat full and returns an array with there index, this function also check if this situation as already been seen if so only ask to play the best move
             function moveToCheck(gameState) {
 
@@ -134,7 +141,7 @@ export class minMaxPlayer extends basicPlayer {
                     else {
 
                         //check if minMax has already been called on this state
-                        const lookupStr = gameEngine.gameState.board.toString()
+                        const lookupStr = positionKey(gameEngine.gameState.board);
 
                         // the lookup only stores the score (a number) of a position for the current search.
                         // A position always sits at the same depth inside one search, so the score is consistent.
