@@ -82,6 +82,8 @@ export class minMaxPlayer extends basicPlayer {
     }
 
     play(gameState) {
+        // scores depend on the depth relative to the current root, so they can't be reused between two searches
+        this.lookup.clear();
         var lookup = this.lookup
         var minMaxCall = 0;
 
@@ -134,23 +136,19 @@ export class minMaxPlayer extends basicPlayer {
                         //check if minMax has already been called on this state
                         const lookupStr = gameEngine.gameState.board.toString()
 
-                        const lookupResult = lookup.get(lookupStr);
+                        // the lookup only stores the score (a number) of a position for the current search.
+                        // A position always sits at the same depth inside one search, so the score is consistent.
+                        const lookupScore = lookup.get(lookupStr);
 
-                        if (lookupResult === undefined || (!lookupResult[2] && depth !== lookupResult[3])) {
-
+                        if (lookupScore === undefined) {
                             let minMaxResult = minMax(gameEngine, !isMaximising, maxDepth, depth + 1);
 
                             minMaxResult[1] = i;
-
-                            if (minMaxResult[0] !== 0) {
-                                lookup.set(lookupStr, minMaxResult);
-                            }
+                            lookup.set(lookupStr, minMaxResult[0]);
 
                             result.push(minMaxResult);
                         } else {
-                            let minMaxResult = lookupResult;
-                            minMaxResult[1] = i;
-                            result.push(minMaxResult);
+                            result.push([lookupScore, i, false, depth]);
                         }
                     }
                 }
